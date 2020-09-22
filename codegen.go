@@ -29,9 +29,7 @@ func Write(dst io.Writer, src io.Reader, options ...Option) error {
 
 		formatted, err := imports.Process("", buf, nil)
 		if err != nil {
-			return CodeFormatError{
-				src: buf,
-			}
+			return codeFormatError(err, buf)
 		}
 
 		src = bytes.NewReader(formatted)

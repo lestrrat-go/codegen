@@ -12,6 +12,21 @@ type CodeFormatError struct {
 	err error
 }
 
+func codeFormatError(err error, src []byte) error {
+	if err == nil {
+		panic("invalid code format error: nil error passed")
+	}
+
+	if src == nil {
+		panic("invalid code format error: nil src passed")
+	}
+
+	return CodeFormatError {
+		err: err,
+		src: src,
+	}
+}
+
 func (err CodeFormatError) Error() string {
 	return err.err.Error()
 }
