@@ -2,6 +2,7 @@ package codegen
 
 const (
 	optKeyFormatCode = `optkey-format-code`
+	optKeyLineNumber = `optkey-line-number`
 )
 
 type Option interface {
@@ -24,4 +25,8 @@ func (o option) Value() interface{} {
 
 func WithFormatCode(b bool) Option {
 	return &option{name: optKeyFormatCode, value: b}
+}
+
+func WithLineNumber(b bool) Option {
+	return &option{name: optKeyLineNumber, value: b}
 }

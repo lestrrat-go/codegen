@@ -2,8 +2,10 @@ package codegen
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"io/ioutil"
+	"math"
 	"os"
 	"path/filepath"
 
@@ -13,11 +15,13 @@ import (
 
 func Write(dst io.Writer, src io.Reader, options ...Option) error {
 	var formatCode bool
-
+	var lineNumber bool
 	for _, option := range options {
 		switch option.Name() {
 		case optKeyFormatCode:
 			formatCode = option.Value().(bool)
+		case optKeyLineNumber:
+			lineNumber = option.Value().(bool)
 		}
 	}
 
@@ -33,6 +37,32 @@ func Write(dst io.Writer, src io.Reader, options ...Option) error {
 		}
 
 		src = bytes.NewReader(formatted)
+	}
+
+	if lineNumber {
+		// Count the number of lines, so we know how many digits to use
+		buf, err := ioutil.ReadAll(src)
+		if err != nil {
+			return errors.Wrap(err, `failed to read from source`)
+		}
+
+		digits := int(math.Log10(float64(bytes.Count(buf, []byte{'\n'})))) + 1
+		dstFmt := fmt.Sprintf("%%0%d %%s\n", digits)
+		var dst bytes.Buffer
+		for len(buf) > 0 {
+			l := bytes.Index(buf, []byte{'\n'})
+			if l == -1 {
+				l = len(buf)
+			}
+			fmt.Fprintf(&dst, dstFmt, buf[:l])
+			if l == len(buf) {
+				buf = nil
+			} else {
+				buf = buf[l+1:]
+			}
+		}
+
+		src = &dst
 	}
 
 	_, err := io.Copy(dst, src)
