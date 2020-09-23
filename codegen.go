@@ -49,17 +49,19 @@ func Write(dst io.Writer, src io.Reader, options ...Option) error {
 		digits := int(math.Log10(float64(bytes.Count(buf, []byte{'\n'})))) + 1
 		dstFmt := fmt.Sprintf("%%0%dd %%s\n", digits)
 		var dst bytes.Buffer
+		lineno := 1
 		for len(buf) > 0 {
 			l := bytes.Index(buf, []byte{'\n'})
 			if l == -1 {
 				l = len(buf)
 			}
-			fmt.Fprintf(&dst, dstFmt, buf[:l])
+			fmt.Fprintf(&dst, dstFmt, lineno, buf[:l])
 			if l == len(buf) {
 				buf = nil
 			} else {
 				buf = buf[l+1:]
 			}
+			lineno++
 		}
 
 		src = &dst
