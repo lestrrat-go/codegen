@@ -8,10 +8,20 @@ import (
 	"math"
 	"os"
 	"path/filepath"
+	"strconv"
 
 	"github.com/pkg/errors"
 	"golang.org/x/tools/imports"
 )
+
+func WriteImports(dst io.Writer, pkgs ...string) error {
+	fmt.Fprintf(dst, "\nimport (")
+	for _, pkg := range pkgs {
+		fmt.Fprintf(dst, "\n%s", strconv.Quote(pkg))
+	}
+	fmt.Fprintf(dst, "\n)")
+	return nil
+}
 
 func Write(dst io.Writer, src io.Reader, options ...Option) error {
 	var formatCode bool
