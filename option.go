@@ -1,32 +1,16 @@
 package codegen
 
-const (
-	optKeyFormatCode = `optkey-format-code`
-	optKeyLineNumber = `optkey-line-number`
-)
+import "github.com/lestrrat-go/option"
 
-type Option interface {
-	Name() string
-	Value() interface{}
-}
+type Option = option.Interface
 
-type option struct {
-	name  string
-	value interface{}
-}
-
-func (o option) Name() string {
-	return o.name
-}
-
-func (o option) Value() interface{} {
-	return o.value
-}
+type identFormatCode struct{}
+type identLineNumber struct{}
 
 func WithFormatCode(b bool) Option {
-	return &option{name: optKeyFormatCode, value: b}
+	return option.New(identFormatCode{}, b)
 }
 
 func WithLineNumber(b bool) Option {
-	return &option{name: optKeyLineNumber, value: b}
+	return option.New(identLineNumber{}, b)
 }

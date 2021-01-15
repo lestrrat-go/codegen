@@ -27,10 +27,10 @@ func Write(dst io.Writer, src io.Reader, options ...Option) error {
 	var formatCode bool
 	var lineNumber bool
 	for _, option := range options {
-		switch option.Name() {
-		case optKeyFormatCode:
+		switch option.Ident() {
+		case identFormatCode{}:
 			formatCode = option.Value().(bool)
-		case optKeyLineNumber:
+		case identLineNumber{}:
 			lineNumber = option.Value().(bool)
 		}
 	}

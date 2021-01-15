@@ -29,7 +29,6 @@ _testmain.go
 .DS_Store
 
 coverage.out
-go.sum
 
 # I redirect my test output to files named "out" way too often
 out
