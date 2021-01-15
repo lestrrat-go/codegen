@@ -49,7 +49,7 @@ func (err CodeFormatError) Source() string {
 	lineno := 1
 	for scanner.Scan() {
 		line := scanner.Text()
-		fmt.Fprintf(&dst, "%s: %s\n", prefix, line)
+		fmt.Fprintf(&dst, prefix + ": %s\n", lineno, line)
 		lineno++
 	}
 
