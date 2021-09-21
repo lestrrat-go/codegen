@@ -14,12 +14,68 @@ import (
 	"golang.org/x/tools/imports"
 )
 
-func WriteImports(dst io.Writer, pkgs ...string) error {
-	fmt.Fprintf(dst, "\nimport (")
-	for _, pkg := range pkgs {
-		fmt.Fprintf(dst, "\n%s", strconv.Quote(pkg))
+// R is a short hand for fmt.Fprintf(...)
+func R(dst io.Writer, s string, args ...interface{}) {
+	fmt.Fprintf(dst, s, args...)
+}
+
+// L writes a line, PREFIXED with a single new line ('\n') character
+func L(dst io.Writer, s string, args ...interface{}) {
+	R(dst, "\n"+s, args...)
+}
+
+// LL writes a line, PREFIXED with two new line ('\n') characters
+func LL(dst io.Writer, s string, args ...interface{}) {
+	R(dst, "\n\n"+s, args...)
+}
+
+type Output struct {
+	src io.Reader
+	dst io.Writer
+}
+
+func NewOutput(dst io.Writer) *Output {
+	o := &Output{}
+	if v, ok := dst.(io.Writer); ok {
+		o.dst = v
 	}
-	fmt.Fprintf(dst, "\n)")
+
+	if v, ok := dst.(io.Reader); ok {
+		o.src = v
+	}
+	return o
+}
+
+func (o *Output) R(s string, args ...interface{}) {
+	R(o.dst, s, args...)
+}
+
+func (o *Output) L(s string, args ...interface{}) {
+	L(o.dst, s, args...)
+}
+
+func (o *Output) LL(s string, args ...interface{}) {
+	LL(o.dst, s, args...)
+}
+
+func (o *Output) WriteImports(pkgs ...string) error {
+	return WriteImports(o.dst, pkgs...)
+}
+
+func (o *Output) Write(dst io.Writer, options ...Option) error {
+	return Write(dst, o.src, options...)
+}
+
+func (o *Output) WriteFile(fn string, options ...Option) error {
+	return WriteFile(fn, o.src, options...)
+}
+
+func WriteImports(dst io.Writer, pkgs ...string) error {
+	L(dst, "import (")
+	for _, pkg := range pkgs {
+		L(dst, "%s", strconv.Quote(pkg))
+	}
+	L(dst, ")")
 	return nil
 }
 

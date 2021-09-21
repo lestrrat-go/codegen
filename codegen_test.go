@@ -13,11 +13,12 @@ func TestCodegen(t *testing.T) {
 	t.Run("FormatCode", func(t *testing.T) {
 		var dst, src bytes.Buffer
 
-		fmt.Fprintf(&src, "package main")
-		fmt.Fprintf(&src, "\n\nfunc main(){")
-		fmt.Fprintf(&src, "\n}")
+		o := codegen.NewOutput(&src)
+		o.R("package main")
+		o.LL("func main(){")
+		o.L("}")
 
-		if !assert.NoError(t, codegen.Write(&dst, &src, codegen.WithFormatCode(true)), `codegen.Write should succeed`) {
+		if !assert.NoError(t, o.Write(&dst, codegen.WithFormatCode(true)), `codegen.Write should succeed`) {
 			return
 		}
 
