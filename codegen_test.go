@@ -2,6 +2,7 @@ package codegen_test
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"testing"
 
@@ -55,4 +56,60 @@ func main() {
 			return
 		}
 	})
+}
+
+func TestObject(t *testing.T) {
+	var _ codegen.Field = &codegen.ConstantField{}
+
+	testcases := []struct {
+		Name   string
+		Input  string
+		Verify func(*testing.T, *codegen.ConstantField)
+	}{
+		{
+			Name:  `Simple`,
+			Input: `{"name": "Field1"}`,
+			Verify: func(t *testing.T, f *codegen.ConstantField) {
+				if !assert.Equal(t, "Field1", f.Name(true), `name should match`) {
+					return
+				}
+
+				if !assert.Equal(t, "field1", f.Name(false), `unexported name should match`) {
+					return
+				}
+
+				if !assert.Equal(t, "string", f.Type(), `type should match`) {
+					return
+				}
+			},
+		},
+		{
+			Name:  `separate name, exported name, and unexported name`,
+			Input: `{"name": "Field1", "exported_name": "Foo", "unexported_name": "bar"}`,
+			Verify: func(t *testing.T, f *codegen.ConstantField) {
+				if !assert.Equal(t, "Foo", f.Name(true), `name should match`) {
+					return
+				}
+
+				if !assert.Equal(t, "bar", f.Name(false), `unexported name should match`) {
+					return
+				}
+
+				if !assert.Equal(t, "string", f.Type(), `type should match`) {
+					return
+				}
+			},
+		},
+	}
+	for _, tc := range testcases {
+		tc := tc
+		t.Run(tc.Name, func(t *testing.T) {
+			var field codegen.ConstantField
+			if !assert.NoError(t, json.Unmarshal([]byte(tc.Input), &field), `json.Unmarshal should succeed`) {
+				return
+			}
+			field.Organize()
+			tc.Verify(t, &field)
+		})
+	}
 }
