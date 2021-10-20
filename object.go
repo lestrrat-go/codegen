@@ -259,6 +259,9 @@ type Field interface {
 	Comment() string
 
 	Extra(string) (interface{}, bool)
+
+	IsRequired() bool
+	IsConstant() bool
 }
 
 type stdField struct {
@@ -384,6 +387,14 @@ OUTER:
 	return nil
 }
 
+func (f *stdField) IsRequired() bool {
+	return f.required
+}
+
+func (f *stdField) IsConstant() bool {
+	return false
+}
+
 type ConstantField struct {
 	stdField
 	value interface{}
@@ -457,4 +468,12 @@ OUTER:
 
 func (f *ConstantField) Value() interface{} {
 	return f.value
+}
+
+func (f *ConstantField) IsRequired() bool {
+	return true
+}
+
+func (f *ConstantField) IsConstant() bool {
+	return false
 }
