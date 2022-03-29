@@ -8,9 +8,7 @@ import (
 	"math"
 	"os"
 	"path/filepath"
-	"strconv"
 
-	"github.com/pkg/errors"
 	"golang.org/x/tools/imports"
 )
 
@@ -58,7 +56,27 @@ func (o *Output) LL(s string, args ...interface{}) {
 	LL(o.dst, s, args...)
 }
 
-func (o *Output) WriteImports(pkgs ...string) error {
+func (o *Output) WritePackage(s string, args ...interface{}) {
+	L(o.dst, "package ")
+	R(o.dst, s, args...)
+}
+
+type ImportPkg struct {
+	Alias string
+	URL   string
+}
+
+func (o *Output) WriteImports(urls ...string) error {
+	var pkgs []ImportPkg
+	for _, url := range urls {
+		pkgs = append(pkgs, ImportPkg{
+			URL: url,
+		})
+	}
+	return o.WriteImportPkgs(pkgs...)
+}
+
+func (o *Output) WriteImportPkgs(pkgs ...ImportPkg) error {
 	return WriteImports(o.dst, pkgs...)
 }
 
@@ -70,10 +88,14 @@ func (o *Output) WriteFile(fn string, options ...Option) error {
 	return WriteFile(fn, o.src, options...)
 }
 
-func WriteImports(dst io.Writer, pkgs ...string) error {
+func WriteImports(dst io.Writer, pkgs ...ImportPkg) error {
 	L(dst, "import (")
 	for _, pkg := range pkgs {
-		L(dst, "%s", strconv.Quote(pkg))
+		if pkg.Alias != "" {
+			L(dst, "%s %q", pkg.Alias, pkg.URL)
+		} else {
+			L(dst, "%q", pkg.URL)
+		}
 	}
 	L(dst, ")")
 	return nil
@@ -94,7 +116,7 @@ func Write(dst io.Writer, src io.Reader, options ...Option) error {
 	if formatCode {
 		buf, err := ioutil.ReadAll(src)
 		if err != nil {
-			return errors.Wrap(err, `failed to read from source`)
+			return fmt.Errorf(`failed to read from source: %w`, err)
 		}
 
 		formatted, err := imports.Process("", buf, nil)
@@ -109,7 +131,7 @@ func Write(dst io.Writer, src io.Reader, options ...Option) error {
 		// Count the number of lines, so we know how many digits to use
 		buf, err := ioutil.ReadAll(src)
 		if err != nil {
-			return errors.Wrap(err, `failed to read from source`)
+			return fmt.Errorf(`failed to read from source: %w`, err)
 		}
 
 		digits := int(math.Log10(float64(bytes.Count(buf, []byte{'\n'})))) + 1
@@ -141,14 +163,14 @@ func WriteFile(filename string, src io.Reader, options ...Option) error {
 	if dir := filepath.Dir(filename); dir != "." {
 		if _, err := os.Stat(dir); err != nil {
 			if err := os.MkdirAll(dir, 0755); err != nil {
-				return errors.Wrapf(err, `failed to create directory %s`, dir)
+				return fmt.Errorf(`failed to create directory %q: %w`, dir, err)
 			}
 		}
 	}
 
 	dst, err := os.Create(filename)
 	if err != nil {
-		return errors.Wrapf(err, `failed to open %s.go`, filename)
+		return fmt.Errorf(`failed to open %s.go: %w`, filename, err)
 	}
 	defer dst.Close()
 

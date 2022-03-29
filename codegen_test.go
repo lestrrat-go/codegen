@@ -56,6 +56,49 @@ func main() {
 			return
 		}
 	})
+	t.Run("WriteImports", func(t *testing.T) {
+		var dst, src bytes.Buffer
+
+		o := codegen.NewOutput(&src)
+		o.WritePackage("main")
+		pkgs := []codegen.ImportPkg{
+			{
+				URL: "github.com/lestrrat-go/codegen",
+			},
+			{
+				Alias: "stdliburl",
+				URL:   "net/url",
+			},
+		}
+		o.WriteImportPkgs(pkgs...)
+
+		o.LL("func main(){")
+		o.L("var u stdliburl.URL")
+		o.L("var o codegen.Output")
+		o.L("}")
+
+		if !assert.NoError(t, o.Write(&dst, codegen.WithFormatCode(true)), `codegen.Write should succeed`) {
+			return
+		}
+
+		const expected = `package main
+
+import (
+	stdliburl "net/url"
+
+	"github.com/lestrrat-go/codegen"
+)
+
+func main() {
+	var u stdliburl.URL
+	var o codegen.Output
+}
+`
+
+		if !assert.Equal(t, expected, dst.String(), `output should match`) {
+			return
+		}
+	})
 }
 
 func TestObject(t *testing.T) {
