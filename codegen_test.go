@@ -70,7 +70,7 @@ func main() {
 				URL:   "net/url",
 			},
 		}
-		o.WriteImportPkgs(pkgs...)
+		_ = o.WriteImportPkgs(pkgs...)
 
 		o.LL("func main(){")
 		o.L("var u stdliburl.URL")
