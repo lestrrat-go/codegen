@@ -213,6 +213,25 @@ OUTER:
 	return nil
 }
 
+// Returns the value of field `name` as a boolean
+func (o *Object) Bool(name string) bool {
+	v, err := boolFrom(o, name)
+	if err != nil {
+		return false
+	}
+	return v
+}
+
+// Returns the value of field `name` as a string. Returns empty value
+// if the object stored in the field is not a string
+func (o *Object) String(name string) string {
+	v, err := stringFrom(o, name)
+	if err != nil {
+		return ""
+	}
+	return v
+}
+
 type FieldList []Field
 
 func (l *FieldList) UnmarshalJSON(data []byte) error {
@@ -274,6 +293,9 @@ type Field interface {
 
 	IsRequired() bool
 	IsConstant() bool
+
+	Bool(string) bool
+	String(string) string
 }
 
 type stdField struct {
@@ -399,6 +421,22 @@ OUTER:
 	return nil
 }
 
+func (f *stdField) Bool(s string) bool {
+	v, err := boolFrom(f, s)
+	if err != nil {
+		return false
+	}
+	return v
+}
+
+func (f *stdField) String(s string) string {
+	v, err := stringFrom(f, s)
+	if err != nil {
+		return ""
+	}
+	return v
+}
+
 func (f *stdField) IsRequired() bool {
 	return f.required
 }
@@ -478,6 +516,22 @@ OUTER:
 	return nil
 }
 
+func (f *ConstantField) Bool(s string) bool {
+	v, err := boolFrom(f, s)
+	if err != nil {
+		return false
+	}
+	return v
+}
+
+func (f *ConstantField) String(s string) string {
+	v, err := stringFrom(f, s)
+	if err != nil {
+		return ""
+	}
+	return v
+}
+
 func (f *ConstantField) Value() interface{} {
 	return f.value
 }
@@ -488,4 +542,34 @@ func (f *ConstantField) IsRequired() bool {
 
 func (f *ConstantField) IsConstant() bool {
 	return false
+}
+
+func boolFrom(src interface {
+	Extra(string) (interface{}, bool)
+}, field string) (bool, error) {
+	v, ok := src.Extra(field)
+	if !ok {
+		return false, fmt.Errorf("%q does not exist in %q", field, field)
+	}
+
+	b, ok := v.(bool)
+	if !ok {
+		return false, fmt.Errorf("%q should be a bool in %q", field, field)
+	}
+	return b, nil
+}
+
+func stringFrom(src interface {
+	Extra(string) (interface{}, bool)
+}, field string) (string, error) {
+	v, ok := src.Extra(field)
+	if !ok {
+		return "", fmt.Errorf("%q does not exist in %q", field, field)
+	}
+
+	b, ok := v.(string)
+	if !ok {
+		return "", fmt.Errorf("%q should be a string in %q", field, field)
+	}
+	return b, nil
 }
