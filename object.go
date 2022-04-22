@@ -215,20 +215,24 @@ OUTER:
 
 // Returns the value of field `name` as a boolean
 func (o *Object) Bool(name string) bool {
-	v, err := boolFrom(o, name)
-	if err != nil {
-		return false
-	}
+	v, _ := boolFrom(o, name, false)
+	return v
+}
+
+func (o *Object) MustBool(name string) bool {
+	v, _ := boolFrom(o, name, true)
 	return v
 }
 
 // Returns the value of field `name` as a string. Returns empty value
 // if the object stored in the field is not a string
 func (o *Object) String(name string) string {
-	v, err := stringFrom(o, name)
-	if err != nil {
-		return ""
-	}
+	v, _ := stringFrom(o, name, false)
+	return v
+}
+
+func (o *Object) MustString(name string) string {
+	v, _ := stringFrom(o, name, true)
 	return v
 }
 
@@ -295,7 +299,9 @@ type Field interface {
 	IsConstant() bool
 
 	Bool(string) bool
+	MustBool(string) bool
 	String(string) string
+	MustString(string) string
 }
 
 type stdField struct {
@@ -421,19 +427,23 @@ OUTER:
 	return nil
 }
 
+func (f *stdField) MustBool(s string) bool {
+	v, _ := boolFrom(f, s, true)
+	return v
+}
+
 func (f *stdField) Bool(s string) bool {
-	v, err := boolFrom(f, s)
-	if err != nil {
-		return false
-	}
+	v, _ := boolFrom(f, s, false)
+	return v
+}
+
+func (f *stdField) MustString(s string) string {
+	v, _ := stringFrom(f, s, true)
 	return v
 }
 
 func (f *stdField) String(s string) string {
-	v, err := stringFrom(f, s)
-	if err != nil {
-		return ""
-	}
+	v, _ := stringFrom(f, s, false)
 	return v
 }
 
@@ -517,18 +527,22 @@ OUTER:
 }
 
 func (f *ConstantField) Bool(s string) bool {
-	v, err := boolFrom(f, s)
-	if err != nil {
-		return false
-	}
+	v, _ := boolFrom(f, s, false)
+	return v
+}
+
+func (f *ConstantField) MustBool(s string) bool {
+	v, _ := boolFrom(f, s, true)
 	return v
 }
 
 func (f *ConstantField) String(s string) string {
-	v, err := stringFrom(f, s)
-	if err != nil {
-		return ""
-	}
+	v, _ := stringFrom(f, s, false)
+	return v
+}
+
+func (f *ConstantField) MustString(s string) string {
+	v, _ := stringFrom(f, s, true)
 	return v
 }
 
@@ -546,30 +560,46 @@ func (f *ConstantField) IsConstant() bool {
 
 func boolFrom(src interface {
 	Extra(string) (interface{}, bool)
-}, field string) (bool, error) {
+}, field string, required bool) (bool, error) {
 	v, ok := src.Extra(field)
 	if !ok {
-		return false, fmt.Errorf("%q does not exist in %q", field, field)
+		err := fmt.Errorf("%q does not exist in %q", field, field)
+		if required {
+			panic(err.Error())
+		}
+		return false, err
 	}
 
 	b, ok := v.(bool)
 	if !ok {
-		return false, fmt.Errorf("%q should be a bool in %q", field, field)
+		err := fmt.Errorf("%q should be a bool in %q", field, field)
+		if required {
+			panic(err.Error())
+		}
+		return false, err
 	}
 	return b, nil
 }
 
 func stringFrom(src interface {
 	Extra(string) (interface{}, bool)
-}, field string) (string, error) {
+}, field string, required bool) (string, error) {
 	v, ok := src.Extra(field)
 	if !ok {
-		return "", fmt.Errorf("%q does not exist in %q", field, field)
+		err := fmt.Errorf("%q does not exist in %q", field, field)
+		if required {
+			panic(err.Error())
+		}
+		return "", err
 	}
 
 	b, ok := v.(string)
 	if !ok {
-		return "", fmt.Errorf("%q should be a string in %q", field, field)
+		err := fmt.Errorf("%q should be a string in %q", field, field)
+		if required {
+			panic(err.Error())
+		}
+		return "", err
 	}
 	return b, nil
 }
