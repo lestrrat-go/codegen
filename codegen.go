@@ -62,6 +62,7 @@ func (o *Output) LL(s string, args ...interface{}) {
 // on each line.
 // The first line is prefixed with an extra new line
 func (o *Output) Comment(s string) {
+	s = strings.TrimSpace(s)
 	if s == "" {
 		return
 	}
