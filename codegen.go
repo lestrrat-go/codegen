@@ -1,6 +1,7 @@
 package codegen
 
 import (
+	"bufio"
 	"bytes"
 	"fmt"
 	"io"
@@ -8,6 +9,7 @@ import (
 	"math"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"golang.org/x/tools/imports"
 )
@@ -54,6 +56,24 @@ func (o *Output) L(s string, args ...interface{}) {
 
 func (o *Output) LL(s string, args ...interface{}) {
 	LL(o.dst, s, args...)
+}
+
+// Comment outputs multi-line comments, prefixed with a '//` marker
+// on each line.
+// The first line is prefixed with an extra new line
+func (o *Output) Comment(s string) {
+	scanner := bufio.NewScanner(strings.NewReader(s))
+	i := 0
+	for scanner.Scan() {
+		l := scanner.Text()
+
+		if i == 0 {
+			o.LL(`// %s`, l)
+		} else {
+			o.L(`// %s`, l)
+		}
+		i++
+	}
 }
 
 func (o *Output) WritePackage(s string, args ...interface{}) {
