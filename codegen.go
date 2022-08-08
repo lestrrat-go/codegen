@@ -60,10 +60,15 @@ func (o *Output) LL(s string, args ...interface{}) {
 
 // Comment outputs multi-line comments, prefixed with a '//` marker
 // on each line.
-// The first line is prefixed with an extra new line
+//
+// Because most of the times comments are placed in the
+// top of a new block that starts with two new lines, this
+// method will insert an empty new line if there is no
+// comment to emit
 func (o *Output) Comment(s string) {
 	s = strings.TrimSpace(s)
 	if s == "" {
+		o.R("\n") // new line if nothing to do
 		return
 	}
 	scanner := bufio.NewScanner(strings.NewReader(s))
