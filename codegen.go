@@ -62,6 +62,9 @@ func (o *Output) LL(s string, args ...interface{}) {
 // on each line.
 // The first line is prefixed with an extra new line
 func (o *Output) Comment(s string) {
+	if s == "" {
+		return
+	}
 	scanner := bufio.NewScanner(strings.NewReader(s))
 	i := 0
 	for scanner.Scan() {
