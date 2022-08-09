@@ -36,10 +36,7 @@ type Output struct {
 
 func NewOutput(dst io.Writer) *Output {
 	o := &Output{}
-	if v, ok := dst.(io.Writer); ok {
-		o.dst = v
-	}
-
+	o.dst = dst
 	if v, ok := dst.(io.Reader); ok {
 		o.src = v
 	}
